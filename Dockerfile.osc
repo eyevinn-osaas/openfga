@@ -1,0 +1,18 @@
+# OpenFGA for OSC: the official release binary in a small image with bash, plus an
+# entrypoint that migrates the PostgreSQL schema and enables preshared-key auth.
+# Pin the tag to the release being published.
+FROM ghcr.io/openfga/openfga:v1.22.0 AS openfga
+
+FROM alpine:3
+RUN apk add --no-cache bash ca-certificates \
+ && adduser -D -u 10001 openfga
+
+COPY --from=openfga /openfga /usr/local/bin/openfga
+COPY --chmod=755 osc-entrypoint.sh /usr/local/bin/osc-entrypoint.sh
+
+USER openfga
+ENV PORT=8080
+EXPOSE 8080
+
+ENTRYPOINT ["/usr/local/bin/osc-entrypoint.sh"]
+CMD ["run"]
